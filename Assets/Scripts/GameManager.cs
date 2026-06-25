@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 using TMPro;
 using System; //UIのテキスト用
 
+[DefaultExecutionOrder(-100)]
 public class GameManager : MonoBehaviour
 {
     //シングルトンパターンでGameManagerインスタンスを一つだけ存在させる
@@ -35,6 +36,21 @@ public class GameManager : MonoBehaviour
     public bool isBossStage = false;
     [SerializeField] float jingleTime = 4f;
     public bool isEnding = false;
+
+    //ゲームマネージャーのセット
+    private void Awake() //Awake()はStart()よりも早く実行される
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+            return;
+        }
+    }
 
     private void OnEnable()
     {
@@ -104,21 +120,6 @@ public class GameManager : MonoBehaviour
         else if (scene.name == "StageSelectScene")
         {
             SoundManager.Instance.PlayBGM(BGMType.StageSelect);
-        }
-    }
-
-    //ゲームマネージャーのセット
-    private void Awake() //Awake()はStart()よりも早く実行される
-    {
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else
-        {
-            Destroy(gameObject);
-            return;
         }
     }
 

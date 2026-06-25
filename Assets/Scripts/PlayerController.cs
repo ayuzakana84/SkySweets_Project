@@ -48,6 +48,14 @@ public class PlayerController : MonoBehaviour
 
     public event System.Action<int> OnFatnessLevelChanged;
 
+    private void Awake()
+    {
+        rb = GetComponent<Rigidbody2D>();
+
+        if (GameManager.Instance != null)
+            GameManager.Instance.RegisterPlayer(this); //プレイヤーの情報を更新する
+    }
+
     public void PrepareRespawn()
     {
         CurrentState = PlayerState.WaitingForStart;
@@ -82,11 +90,6 @@ public class PlayerController : MonoBehaviour
 
     void Start()
     {
-        rb = GetComponent<Rigidbody2D>();
-
-        if (GameManager.Instance != null)
-            GameManager.Instance.RegisterPlayer(this); //プレイヤーの情報を更新する
-
         //アニメーター
         animNormal = normalBody.GetComponent<Animator>();
         animChubby = chubbyBody.GetComponent<Animator>();

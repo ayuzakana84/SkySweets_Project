@@ -871,6 +871,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player: {fileID: 302070561}
   followStartY: 0
+  cameraOffsetY: 0
   backgroundMaterial: {fileID: 2100000, guid: 7736a78e60a9e6547a1f1284ba8f6dae, type: 2}
   scrollRatio: 0.1
 --- !u!1001 &578436048
@@ -2865,6 +2866,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: PauseSystem
       objectReference: {fileID: 0}
+    - target: {fileID: 6607979314006554359, guid: 2be803debe3a62b4e9ddb7d0ea0b9335, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2942,6 +2947,10 @@ PrefabInstance:
     - target: {fileID: 1493557422565781694, guid: e5b2cde37a1dbcf41b4f1c26a4007182, type: 3}
       propertyPath: m_Name
       value: Tutorial_Canvas
+      objectReference: {fileID: 0}
+    - target: {fileID: 1493557422565781694, guid: e5b2cde37a1dbcf41b4f1c26a4007182, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6837839438086102119, guid: e5b2cde37a1dbcf41b4f1c26a4007182, type: 3}
       propertyPath: m_Pivot.x
@@ -3150,6 +3159,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 4037220343862522818, guid: 9c56af37b3e20294e9f8ec3bb754b5cf, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4037220343862522818, guid: 9c56af37b3e20294e9f8ec3bb754b5cf, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6925516828849736793, guid: 9c56af37b3e20294e9f8ec3bb754b5cf, type: 3}
       propertyPath: m_Pivot.x
       value: 0
