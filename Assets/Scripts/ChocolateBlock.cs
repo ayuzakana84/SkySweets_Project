@@ -7,9 +7,11 @@ public class ChocolateBlock : MonoBehaviour, IDamageable
 {
     private SpriteRenderer spriteRenderer;
 
-    [SerializeField] int ScorePoint = 300;
-    [SerializeField] int HitPoint = 3;
-    [SerializeField] float FatnessPoint = 1.0f;
+    [SerializeField] int scorePoint = 300;
+    [SerializeField] int hitPoint = 3;
+    [SerializeField] float fatnessPoint = 1.0f;
+
+    public int HitPoint { get { return hitPoint; } }
 
     [SerializeField] Sprite normalSprite;
     [SerializeField] Sprite damagedSprite01;
@@ -56,22 +58,22 @@ public class ChocolateBlock : MonoBehaviour, IDamageable
             Instantiate(breakEffect, transform.position, Quaternion.identity);
         }
 
-        HitPoint -= damage;
-        OnDamageTaken?.Invoke(HitPoint);
+        hitPoint -= damage;
+        OnDamageTaken?.Invoke(hitPoint);
 
-        if (HitPoint == 2)
+        if (hitPoint == 2)
         {
             spriteRenderer.sprite = damagedSprite01;
         }
-        else if (HitPoint == 1)
+        else if (hitPoint == 1)
         {
             spriteRenderer.sprite = damagedSprite02;
         }
-        else if (HitPoint <= 0)
+        else if (hitPoint <= 0)
         {
             isDestroying = true;
 
-            GameManager.Instance.DestroyedBlock(ScorePoint, FatnessPoint); // GameManager‚ÌŠÖ”‚ðŒÄ‚Ño‚·
+            GameManager.Instance.DestroyedBlock(scorePoint, fatnessPoint); // GameManager‚ÌŠÖ”‚ðŒÄ‚Ño‚·
             Destroy(gameObject);
         }
     }

@@ -4,9 +4,9 @@ using UnityEngine;
 
 public class CookieBlock : MonoBehaviour, IDamageable
 {
-    [SerializeField] int ScorePoint = 100;
-    [SerializeField] int HitPoint = 1;
-    [SerializeField] float FatnessPoint = 1.0f;
+    [SerializeField] int scorePoint = 100;
+    [SerializeField] int hitPoint = 1;
+    [SerializeField] float fatnessPoint = 1.0f;
 
     [SerializeField] private GameObject breakEffect;
 
@@ -40,9 +40,9 @@ public class CookieBlock : MonoBehaviour, IDamageable
         //サウンドマネージャーで効果音を鳴らす(ランダム)
         SoundManager.Instance.PlayBlockHitSE();
 
-        HitPoint -= damage;
+        hitPoint -= damage;
 
-        if (HitPoint <= 0)
+        if (hitPoint <= 0)
         {
             isDestroying = true;
 
@@ -52,7 +52,7 @@ public class CookieBlock : MonoBehaviour, IDamageable
                 Instantiate(breakEffect, transform.position, Quaternion.identity);
             }
 
-            GameManager.Instance.DestroyedBlock(ScorePoint, FatnessPoint); //GameManagerの関数を呼び出す
+            GameManager.Instance.DestroyedBlock(scorePoint, fatnessPoint); //GameManagerの関数を呼び出す
             Destroy(gameObject);
         }
     }

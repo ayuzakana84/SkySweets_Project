@@ -19,7 +19,10 @@ public class ChocolateAuraController : MonoBehaviour
     private void OnEnable()
     {
         if (parentBlock != null)
+        {
             parentBlock.OnDamageTaken += UpdateAuraSprite;
+            UpdateAuraSprite(parentBlock.HitPoint);
+        }
     }
 
     private void OnDisable()
