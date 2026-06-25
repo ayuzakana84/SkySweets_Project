@@ -26,9 +26,14 @@ public class BlockSpawner : MonoBehaviour
 
     private float timer = 0f;
     private float currentInterval; //次にブロックを出すまでの時間を記憶する変数
+    private int totalWeight = 0; //ブロックの出やすさの合計値を記憶する変数
 
     private void Start()
     {
+        //ブロックの出やすさの合計を求める
+        foreach (var block in spawnableBlocks)
+            totalWeight += block.weight;
+
         SetNextInterval();
     }
 
@@ -53,13 +58,6 @@ public class BlockSpawner : MonoBehaviour
     {
         if (spawnableBlocks == null || spawnableBlocks.Length == 0)
             return;
-
-        //ブロックの出やすさの合計を求める
-        int totalWeight = 0;
-        foreach (var block in spawnableBlocks)
-        {
-            totalWeight += block.weight;
-        }
 
         //ブロックの種類をランダムに選ぶ
         int randomValue = Random.Range(0, totalWeight);
