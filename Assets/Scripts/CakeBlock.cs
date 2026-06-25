@@ -10,14 +10,7 @@ public class CakeBlock : MonoBehaviour, IDamageable
 
     [SerializeField] private GameObject breakEffect;
 
-    private Collider2D myCollider;
     private bool isDestroying = false;
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        myCollider = GetComponent<Collider2D>();
-    }
 
     public void AddDamage(int damage)
     {
