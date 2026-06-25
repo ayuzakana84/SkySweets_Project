@@ -1,0 +1,96 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &1
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5e6fedc2472449cead18ef23b5cb30d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Library:
+  - m_Name: Eye_R
+    m_Hash: 912046010
+    m_CategoryList: []
+    m_OverrideEntries:
+    - m_Name: Open
+      m_Hash: 71445658
+      m_Sprite: {fileID: -1348496017620563108, guid: e18b9275e6a5b8244b1b79a80f8fe058, type: 3}
+      m_FromMain: 0
+      m_SpriteOverride: {fileID: -1348496017620563108, guid: e18b9275e6a5b8244b1b79a80f8fe058, type: 3}
+    - m_Name: Smile
+      m_Hash: 55258123
+      m_Sprite: {fileID: -5439836636536035238, guid: e18b9275e6a5b8244b1b79a80f8fe058, type: 3}
+      m_FromMain: 0
+      m_SpriteOverride: {fileID: -5439836636536035238, guid: e18b9275e6a5b8244b1b79a80f8fe058, type: 3}
+    - m_Name: Half
+      m_Hash: 459861535
+      m_Sprite: {fileID: -6484471584238893806, guid: e18b9275e6a5b8244b1b79a80f8fe058, type: 3}
+      m_FromMain: 0
+      m_SpriteOverride: {fileID: -6484471584238893806, guid: e18b9275e6a5b8244b1b79a80f8fe058, type: 3}
+    - m_Name: Close
+      m_Hash: 314617536
+      m_Sprite: {fileID: 7170034542515153511, guid: e18b9275e6a5b8244b1b79a80f8fe058, type: 3}
+      m_FromMain: 0
+      m_SpriteOverride: {fileID: 7170034542515153511, guid: e18b9275e6a5b8244b1b79a80f8fe058, type: 3}
+    m_FromMain: 0
+    m_EntryOverrideCount: 4
+  - m_Name: Eye_L
+    m_Hash: 206801625
+    m_CategoryList: []
+    m_OverrideEntries:
+    - m_Name: Open
+      m_Hash: 71445658
+      m_Sprite: {fileID: 5468238442687872263, guid: e18b9275e6a5b8244b1b79a80f8fe058, type: 3}
+      m_FromMain: 0
+      m_SpriteOverride: {fileID: 5468238442687872263, guid: e18b9275e6a5b8244b1b79a80f8fe058, type: 3}
+    - m_Name: Smile
+      m_Hash: 55258123
+      m_Sprite: {fileID: -11917725052595197, guid: e18b9275e6a5b8244b1b79a80f8fe058, type: 3}
+      m_FromMain: 0
+      m_SpriteOverride: {fileID: -11917725052595197, guid: e18b9275e6a5b8244b1b79a80f8fe058, type: 3}
+    - m_Name: Half
+      m_Hash: 459861535
+      m_Sprite: {fileID: 8422419402979011165, guid: e18b9275e6a5b8244b1b79a80f8fe058, type: 3}
+      m_FromMain: 0
+      m_SpriteOverride: {fileID: 8422419402979011165, guid: e18b9275e6a5b8244b1b79a80f8fe058, type: 3}
+    - m_Name: Close
+      m_Hash: 314617536
+      m_Sprite: {fileID: -6373310575682590158, guid: e18b9275e6a5b8244b1b79a80f8fe058, type: 3}
+      m_FromMain: 0
+      m_SpriteOverride: {fileID: -6373310575682590158, guid: e18b9275e6a5b8244b1b79a80f8fe058, type: 3}
+    m_FromMain: 0
+    m_EntryOverrideCount: 4
+  - m_Name: Mouth
+    m_Hash: 520385427
+    m_CategoryList: []
+    m_OverrideEntries:
+    - m_Name: Normal
+      m_Hash: 640249298
+      m_Sprite: {fileID: -5520686470165950598, guid: e18b9275e6a5b8244b1b79a80f8fe058, type: 3}
+      m_FromMain: 0
+      m_SpriteOverride: {fileID: -5520686470165950598, guid: e18b9275e6a5b8244b1b79a80f8fe058, type: 3}
+    - m_Name: Open
+      m_Hash: 71445658
+      m_Sprite: {fileID: 5390105162698510184, guid: e18b9275e6a5b8244b1b79a80f8fe058, type: 3}
+      m_FromMain: 0
+      m_SpriteOverride: {fileID: 5390105162698510184, guid: e18b9275e6a5b8244b1b79a80f8fe058, type: 3}
+    - m_Name: Mogu1
+      m_Hash: 185261212
+      m_Sprite: {fileID: 1692085982535854556, guid: e18b9275e6a5b8244b1b79a80f8fe058, type: 3}
+      m_FromMain: 0
+      m_SpriteOverride: {fileID: 1692085982535854556, guid: e18b9275e6a5b8244b1b79a80f8fe058, type: 3}
+    - m_Name: Mogu2
+      m_Hash: 302222630
+      m_Sprite: {fileID: -4293932006550838898, guid: e18b9275e6a5b8244b1b79a80f8fe058, type: 3}
+      m_FromMain: 0
+      m_SpriteOverride: {fileID: -4293932006550838898, guid: e18b9275e6a5b8244b1b79a80f8fe058, type: 3}
+    m_FromMain: 0
+    m_EntryOverrideCount: 4
+  m_PrimaryLibraryGUID: 
+  m_ModificationHash: 639064781747340663
+  m_Version: 1
