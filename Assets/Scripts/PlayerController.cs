@@ -17,32 +17,30 @@ public class PlayerController : MonoBehaviour
     //読み取り専用にして書き換えられないようにする
     public PlayerState CurrentState { get; private set; } = PlayerState.WaitingForStart;
 
-    [SerializeField] GameObject normalBody;
-    [SerializeField] GameObject chubbyBody;
-    [SerializeField] GameObject maxfatBody;
+    //体型ごとのデータをまとめる構造体
+    [System.Serializable]
+    public struct BodyData
+    {
+        public GameObject body;
+        public GameObject aura;
+        public int attackForce;
+    }
 
-    [SerializeField] int attackForce = 1;
-    [SerializeField] float bounceForce = 13f;
+    [SerializeField] private BodyData[] bodyDatas;
 
-    [SerializeField] float fallBoundary = -15f; //ミスになる高さ
-
+    [SerializeField] float bounceForce = 13f; //跳ねる力
     [SerializeField] float fatnessMultiplier = 5f; // 肥満度レベル1ごとに力を増やす倍率
+    [SerializeField] float fallBoundary = -15f; //ミスになる高さ
+    [SerializeField] float waitPositionY = -3f; //復活時の高さ
+
     private int fatnessLevel = 0; // 肥満度レベル
+    private int currentAttackForce = 1; //現在の攻撃力
 
     [SerializeField] ParticleSystem smokeEffect; //体型変化時に出すエフェクト
-
-    [SerializeField] GameObject normalAura;
-    [SerializeField] GameObject chubbyAura;
-    [SerializeField] GameObject maxfatAura;
 
     private PaddleController paddle;
 
     public int FatnessLevel => fatnessLevel; //ゲームマネージャーから見れるようにプロパティ化
-
-    //アニメーター
-    private Animator animNormal;
-    private Animator animChubby;
-    private Animator animFat;
 
     private Animator currentAnim; //現在の体型に合わせたアニメーターを入れる
 
@@ -60,7 +58,7 @@ public class PlayerController : MonoBehaviour
     {
         CurrentState = PlayerState.WaitingForStart;
 
-        UpdateAuraState();
+        UpdateBodyState();
 
         if (rb != null)
         {
@@ -68,11 +66,14 @@ public class PlayerController : MonoBehaviour
             rb.velocity = Vector2.zero;
         }
 
-        //BaseLayerの数値を取得する
-        int layerIndex = currentAnim.GetLayerIndex("Base Layer");
+        if (currentAnim != null)
+        {
+            //BaseLayerの数値を取得する
+            int layerIndex = currentAnim.GetLayerIndex("Base Layer");
 
-        currentAnim.SetFloat("VelocityY", 0f);
-        currentAnim.Play("Idle", layerIndex, 0f);
+            currentAnim.SetFloat("VelocityY", 0f);
+            currentAnim.Play("Idle", layerIndex, 0f);
+        }
     }
 
     //プレイヤーの物理演算を開始する
@@ -82,7 +83,7 @@ public class PlayerController : MonoBehaviour
 
         CurrentState = PlayerState.Playing;
 
-        UpdateAuraState();
+        UpdateBodyState();
 
         rb.simulated = true;
         rb.velocity = Vector3.zero;
@@ -90,13 +91,9 @@ public class PlayerController : MonoBehaviour
 
     void Start()
     {
-        //アニメーター
-        animNormal = normalBody.GetComponent<Animator>();
-        animChubby = chubbyBody.GetComponent<Animator>();
-        animFat = maxfatBody.GetComponent<Animator>();
-
         CurrentState = PlayerState.WaitingForStart;
-        UpdateBodyState();
+
+        ChangeFatnessLevel(0);
     }
 
     public void StopMovement()
@@ -137,7 +134,7 @@ public class PlayerController : MonoBehaviour
     private void UpdateWaitingState()
     {
         float paddleX = GameManager.Instance.GetPaddlePosition().x;
-        transform.position = new Vector3(paddleX, -3, 0);
+        transform.position = new Vector3(paddleX, waitPositionY, 0);
 
         if (Input.GetMouseButtonDown(0))
         {
@@ -164,9 +161,6 @@ public class PlayerController : MonoBehaviour
 
     private void UpdatePlayingState()
     {
-        //肥満度レベルに応じて重力を調整
-        rb.gravityScale = 1.0f + (fatnessLevel * 0.5f);
-
         //ライフを減らす処理
         if (transform.position.y < fallBoundary)
         {
@@ -197,10 +191,7 @@ public class PlayerController : MonoBehaviour
                 //パドルの見た目を変更
                 paddle.SetPlayer(true);
 
-                //見た目を非表示にする
-                normalBody.SetActive(false);
-                chubbyBody.SetActive(false);
-                maxfatBody.SetActive(false);
+                UpdateBodyState();
             }
             else //通常の処理
             {
@@ -285,7 +276,7 @@ public class PlayerController : MonoBehaviour
 
         if (damageable != null)
         {
-            damageable.AddDamage(attackForce); //持っていたらダメージを与える
+            damageable.AddDamage(currentAttackForce); //持っていたらダメージを与える
 
             //食べるアニメーションを再生する
             if (currentAnim != null)
@@ -303,7 +294,7 @@ public class PlayerController : MonoBehaviour
         IDamageable damageable = target.GetComponentInParent<IDamageable>();
 
         if (damageable != null)
-            damageable.AddDamage(attackForce);
+            damageable.AddDamage(currentAttackForce);
     }
 
     //ボスから呼ばれるプレイヤーをはじき返す関数
@@ -318,81 +309,56 @@ public class PlayerController : MonoBehaviour
         rb.velocity = direction * (bounceForce * forceMultiplier);
     }
 
-    public void ChangeToNormal()
+    //プレイヤーの体型レベルを変更する関数
+    public void ChangeFatnessLevel(int level)
     {
-        if (smokeEffect != null && CurrentState != PlayerState.InPaddle)
-        {
-            smokeEffect.Play();
-        }
+        //範囲外の数字が出たら返す
+        if (level < 0 || level >= bodyDatas.Length) return;
 
-        fatnessLevel = 0;
-        attackForce = 1;
+        //パドルの外にいるときだけ煙のエフェクトを出す
+        if (fatnessLevel != level && smokeEffect != null && CurrentState != PlayerState.InPaddle)
+            smokeEffect.Play();
+
+        //レベルと攻撃力を変更
+        fatnessLevel = level;
+        currentAttackForce = bodyDatas[level].attackForce;
+
+        //肥満度レベルに応じて重力を更新
+        if (rb != null)
+            rb.gravityScale = 1.0f + (fatnessLevel * 0.5f);
+
         UpdateBodyState();
 
+        //体型が変わったことを伝える
         OnFatnessLevelChanged?.Invoke(fatnessLevel);
     }
 
-    public void ChangeToChubby()
-    {
-        if (smokeEffect != null && CurrentState != PlayerState.InPaddle)
-        {
-            smokeEffect.Play();
-        }
-
-        fatnessLevel = 1;
-        attackForce = 2;
-        UpdateBodyState();
-
-        OnFatnessLevelChanged?.Invoke(fatnessLevel);
-    }
-
-    public void ChangeToMaxfat()
-    {
-        if (smokeEffect != null && CurrentState != PlayerState.InPaddle)
-        {
-            smokeEffect.Play();
-        }
-
-        fatnessLevel = 2;
-        attackForce = 3;
-        UpdateBodyState();
-
-        OnFatnessLevelChanged?.Invoke(fatnessLevel);
-    }
-
-    private void UpdateAuraState()
-    {
-        //念のため全て非表示に
-        if (normalAura != null) normalAura.SetActive(false);
-        if (chubbyAura != null) chubbyAura.SetActive(false);
-        if (maxfatAura != null) maxfatAura.SetActive(false);
-
-        //待機中じゃなければここで処理を終わる
-        if (CurrentState != PlayerState.WaitingForStart) return;
-
-        // 待機中なら、現在の体型に合わせて1つだけ表示
-        if (fatnessLevel == 0 && normalAura != null) normalAura.SetActive(true);
-        else if (fatnessLevel == 1 && chubbyAura != null) chubbyAura.SetActive(true);
-        else if (fatnessLevel == 2 && maxfatAura != null) maxfatAura.SetActive(true);
-    }
-
-    //体型の見た目とcurrentAnimの参照を一括更新する
+    //記憶されているレベルを見てプレイヤーの見た目を変更する関数
     private void UpdateBodyState()
     {
-        //パドルの中にいる間は、見た目は表示させない
-        if (CurrentState == PlayerState.InPaddle) return;
+        if (bodyDatas == null || bodyDatas.Length == 0) return;
 
-        normalBody.SetActive(fatnessLevel == 0);
-        chubbyBody.SetActive(fatnessLevel == 1);
-        maxfatBody.SetActive(fatnessLevel == 2);
+        //プレイヤーがパドルに入っているかどうか
+        bool isHiddenByPaddle = (CurrentState == PlayerState.InPaddle);
 
-        UpdateAuraState();
+        for (int i = 0; i < bodyDatas.Length; i++)
+        {
+            //現在のレベルと一致しているか
+            bool isActiveLevel = (i == fatnessLevel);
 
-        if (fatnessLevel == 0)
-            currentAnim = animNormal;
-        else if (fatnessLevel == 1)
-            currentAnim = animChubby;
-        else if (fatnessLevel == 2)
-            currentAnim = animFat;
+            if (bodyDatas[i].body != null)
+            {
+                //パドルの中にいない状態かつ現在のレベルと同じ体型を表示、それ以外は非表示
+                bodyDatas[i].body.SetActive(isActiveLevel && !isHiddenByPaddle);
+
+                //現在のレベルのAnimatorを取得しておく
+                if (isActiveLevel)
+                    currentAnim = bodyDatas[i].body.GetComponent<Animator>();
+            }
+
+            //スタート待機中かつ現在のレベルと同じオーラなら表示、それ以外は非表示
+            if (bodyDatas[i].aura != null)
+                bodyDatas[i].aura.SetActive(isActiveLevel && CurrentState == PlayerState.WaitingForStart);
+        }
     }
 }

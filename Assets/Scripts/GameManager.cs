@@ -322,17 +322,17 @@ public class GameManager : MonoBehaviour
         if (fatnessPoints >= changeMaxFatPoints)
         {
             if (player.FatnessLevel < 2)
-                player.ChangeToMaxfat();
+                player.ChangeFatnessLevel(2);
         }
         else if (fatnessPoints >= changeChubbyPoints)
         {
             if (player.FatnessLevel != 1)
-                player.ChangeToChubby();
+                player.ChangeFatnessLevel(1);
         }
         else
         {
             if (player.FatnessLevel > 0)
-                player.ChangeToNormal();
+                player.ChangeFatnessLevel(0);
         }
     }
 

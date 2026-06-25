@@ -5066,17 +5066,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b4bc21d23e55af24587cf221f5d0e820, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  normalBody: {fileID: 2804886577901084083}
-  chubbyBody: {fileID: 7530204467170461584}
-  maxfatBody: {fileID: 717928271262301211}
-  attackForce: 1
+  bodyDatas:
+  - body: {fileID: 2804886577901084083}
+    aura: {fileID: 5697908142751799271}
+    attackForce: 1
+  - body: {fileID: 7530204467170461584}
+    aura: {fileID: 6191762530442536066}
+    attackForce: 2
+  - body: {fileID: 717928271262301211}
+    aura: {fileID: 3531886977096784865}
+    attackForce: 3
   bounceForce: 13
   fallBoundary: -15
   fatnessMultiplier: 6.5
   smokeEffect: {fileID: 4257907365963940317}
-  normalAura: {fileID: 5697908142751799271}
-  chubbyAura: {fileID: 6191762530442536066}
-  maxfatAura: {fileID: 3531886977096784865}
 --- !u!1 &5697908142751799271
 GameObject:
   m_ObjectHideFlags: 0
