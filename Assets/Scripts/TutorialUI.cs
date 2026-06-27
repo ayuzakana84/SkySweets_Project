@@ -1,18 +1,25 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class TutorialUI : MonoBehaviour
 {
-    void Start()
+    public event Action OnTutorialFinished;
+
+    private void Awake()
     {
-        //チュートリアル中のフラグを立てる
+        //チュートリアルがあることをゲームマネージャーに伝える
         if (GameManager.Instance != null)
-            GameManager.Instance.isTutorialActive = true;
+            GameManager.Instance.RegisterTutorial(this);
     }
 
     private void Update()
     {
+        //ポーズ中ならチュートリアル画像を消さずに返す
+        if (GameManager.Instance != null && GameManager.Instance.IsPaused)
+            return;
+
         if (Input.GetMouseButtonDown(0))
             CloseTutorial();
     }
@@ -20,8 +27,6 @@ public class TutorialUI : MonoBehaviour
     private void CloseTutorial()
     {
         gameObject.SetActive(false);
-
-        if (GameManager.Instance != null)
-            GameManager.Instance.isTutorialActive = false;
+        OnTutorialFinished?.Invoke();
     }
 }

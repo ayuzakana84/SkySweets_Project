@@ -24,7 +24,7 @@ public class PauseManager : MonoBehaviour
             return;
 
         //ステージ終了の処理が始まったらポーズ画面の開閉を禁止にする
-        if (GameManager.Instance != null && GameManager.Instance.isEnding)
+        if (GameManager.Instance != null && GameManager.Instance.CurrentState == GameManager.GameState.Ending)
             return;
 
         if (Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.P))
@@ -52,21 +52,13 @@ public class PauseManager : MonoBehaviour
 
     private void PauseGame()
     {
-        GameManager.Instance.SetPaused(true);
-        Time.timeScale = 0f;
+        GameManager.Instance.TogglePause(true);
         pauseCanvas.SetActive(true);
-
-        if (SoundManager.Instance != null)
-            SoundManager.Instance.SetPauseBGM(true);
     }
 
     public void ResumeGame()
     {
-        GameManager.Instance.SetPaused(false);
-        Time.timeScale = 1f;
+        GameManager.Instance.TogglePause(false);
         pauseCanvas.SetActive(false);
-
-        if (SoundManager.Instance != null)
-            SoundManager.Instance.SetPauseBGM(false);
     }
 }

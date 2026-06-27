@@ -28,8 +28,12 @@ public class BlockSpawner : MonoBehaviour
     private float currentInterval; //次にブロックを出すまでの時間を記憶する変数
     private int totalWeight = 0; //ブロックの出やすさの合計値を記憶する変数
 
+    private GameManager gm;
+
     private void Start()
     {
+        gm = GameManager.Instance;
+
         //ブロックの出やすさの合計を求める
         foreach (var block in spawnableBlocks)
             totalWeight += block.weight;
@@ -40,7 +44,7 @@ public class BlockSpawner : MonoBehaviour
     void Update()
     {
         //ポーズ中、ゲーム終了演出中、またはプレイヤーが存在しない場合は止める
-        if (GameManager.Instance.IsPaused || GameManager.Instance.isEnding || GameManager.Instance.Player == null)
+        if (gm.IsPaused || gm.CurrentState == GameManager.GameState.Ending || gm.Player == null)
             return;
 
         timer += Time.deltaTime;

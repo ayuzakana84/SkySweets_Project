@@ -2,8 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using TMPro;
-using System; //UIのテキスト用
 
 [DefaultExecutionOrder(-100)]
 public class GameManager : MonoBehaviour
@@ -11,31 +9,36 @@ public class GameManager : MonoBehaviour
     //シングルトンパターンでGameManagerインスタンスを一つだけ存在させる
     public static GameManager Instance { get; private set; }
 
+    public enum GameState
+    {
+        Loading,
+        Tutorial,
+        Countdown,
+        Playing,
+        Ending
+    }
+    public GameState CurrentState { get; private set; } = GameState.Loading;
+
     public bool IsPaused { get; private set; } = false;
+    public bool isBossStage = false;
 
-    private PlayerController player;
-    public PlayerController Player => player; //別のスクリプトからプレイヤーを読み取れるようにする
+    [Header("スコア・システム関連")]
+    [SerializeField] float jingleTime = 4f;
+    [SerializeField] int changeChubbyPoints = 2;
+    [SerializeField] int changeMaxFatPoints = 5; //体型を変化させるブロック数
+    [SerializeField] int maxLife = 3; //ライフ数
 
+    public PlayerController Player { get; private set; }
     private PaddleController paddle;
-
     private UIManager currentUIManager;
+    private TutorialUI currentTutorialUI;
 
     //スコア部分
     private int scoreCount = 0;
     private int combocount = 0;
     private int totalBlocksInStage = 0;
     private float fatnessPoints = 0;
-
-    [SerializeField] int changeChubbyPoints = 2;
-    [SerializeField] int changeMaxFatPoints = 5; //体型を変化させるブロック数
-
-    [SerializeField] int maxLife = 3; //ライフ数
     private int currentLife;
-
-    public bool isTutorialActive = false;
-    public bool isBossStage = false;
-    [SerializeField] float jingleTime = 4f;
-    public bool isEnding = false;
 
     //ゲームマネージャーのセット
     private void Awake() //Awake()はStart()よりも早く実行される
@@ -64,6 +67,26 @@ public class GameManager : MonoBehaviour
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
+    public void ChangeState(GameState newState)
+    {
+        if (CurrentState == newState) return;
+        CurrentState = newState;
+    }
+
+    public void TogglePause(bool isPause)
+    {
+        if (CurrentState == GameState.Loading || CurrentState == GameState.Ending)
+            return;
+
+        IsPaused = isPause;
+
+        if (IsPaused) Time.timeScale = 0f;
+        else Time.timeScale = 1f;
+
+        if (SoundManager.Instance != null)
+            SoundManager.Instance.SetPauseBGM(IsPaused);
+    }
+
     public void RegisterUIManager(UIManager uiManager)
     {
         currentUIManager = uiManager;
@@ -78,11 +101,40 @@ public class GameManager : MonoBehaviour
             currentUIManager.UpdateBlockCount(totalBlocksInStage);
     }
 
+    //新しく生成されたプレイヤーの情報を受け取る
+    public void RegisterPlayer(PlayerController newPlayer)
+    {
+        Player = newPlayer;
+    }
+
+    public void RegisterPaddle(PaddleController newPaddle)
+    {
+        paddle = newPaddle;
+    }
+
+    public void RegisterTutorial(TutorialUI tutorialUI)
+    {
+        ChangeState(GameState.Tutorial);
+        currentTutorialUI = tutorialUI;
+        tutorialUI.OnTutorialFinished += OnTutorialFinishedHandler;
+    }
+    private void OnTutorialFinishedHandler()
+    {
+        if (currentTutorialUI != null)
+        {
+            currentTutorialUI.OnTutorialFinished -= OnTutorialFinishedHandler;
+            currentTutorialUI = null;
+        }
+
+        StartCountdownSequence();
+    }
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         //ポーズから遷移した時用に正常化
         Time.timeScale = 1f;
-        SetPaused(false);
+        IsPaused = false;
+        ChangeState(GameState.Loading);
+
         if (SoundManager.Instance != null)
             SoundManager.Instance.SetPauseBGM(false);
 
@@ -91,10 +143,10 @@ public class GameManager : MonoBehaviour
         {
             isBossStage = (GameObject.FindWithTag("Boss")  != null);
 
-            isEnding = false;
             currentLife = maxLife;
             fatnessPoints = 0;
             scoreCount = 0;
+            combocount = 0;
 
             //Tag("Block")を持つゲームオブジェクトの総数を設定
             GameObject[] blocks = GameObject.FindGameObjectsWithTag("Block");
@@ -102,58 +154,34 @@ public class GameManager : MonoBehaviour
 
             SoundManager.Instance.PlayBGM(BGMType.MainStage);
 
-            StartCoroutine(WaitAndStartGame());
+            StartGameFlow();
         }
         else if (scene.name == "TitleScene")
-        {
-            //タイトルBGMを鳴らす
             SoundManager.Instance.PlayBGM(BGMType.Title);
-        }
         else if (scene.name == "GameclearScene")
-        {
             SoundManager.Instance.PlayBGM(BGMType.Clear);
-        }
         else if (scene.name == "GameoverScene")
-        {
             SoundManager.Instance.PlayBGM(BGMType.GameOver);
-        }
         else if (scene.name == "StageSelectScene")
-        {
             SoundManager.Instance.PlayBGM(BGMType.StageSelect);
-        }
     }
 
-    //新しく生成されたプレイヤーの情報を受け取る
-    public void RegisterPlayer(PlayerController newPlayer)
+    private IEnumerator StartGameFlow()
     {
-        player = newPlayer;
-    }
-
-    public void RegisterPaddle(PaddleController newPaddle)
-    {
-        paddle = newPaddle;
-    }
-
-    public void SetPaused(bool paused)
-    {
-        IsPaused = paused;
-    }
-
-    private IEnumerator WaitAndStartGame()
-    {
-        //チュートリアルUIの Start() が実行されるのを1フレームだけ待つ
+        //RegisterTutorialを待つために１フレーム待機
         yield return null;
 
-        //チュートリアルが終わるまで待機
-        yield return new WaitUntil(() => isTutorialActive == false);
-
-        //カウントダウン開始
-        StartCountdownSequence();
+        //チュートリアルが無かったらそのままゲーム開始
+        if (CurrentState == GameState.Loading)
+        {
+            StartCountdownSequence();
+        }
     }
 
     public void StartCountdownSequence()
     {
-        player.PrepareRespawn();
+        ChangeState(GameState.Countdown);
+        Player.PrepareRespawn();
         StartCoroutine(CountdownRoutine());
     }
 
@@ -171,8 +199,15 @@ public class GameManager : MonoBehaviour
             float timer = 0;
             while (timer < 1.0f)
             {
-                if (player != null && player.CurrentState != PlayerController.PlayerState.WaitingForStart)
-                    goto EndSequence;
+                //カウントダウンがスキップされた場合
+                if (Player != null && Player.CurrentState != PlayerController.PlayerState.WaitingForStart)
+                {
+                    if (currentUIManager != null)
+                        currentUIManager.SetCountdownActive(false);
+                    ChangeState(GameState.Playing);
+
+                    yield break;
+                }
 
                 timer += Time.deltaTime;
                 yield return null;
@@ -183,34 +218,34 @@ public class GameManager : MonoBehaviour
         if (currentUIManager != null)
             currentUIManager.UpdateCountdownText("GO!");
 
-        if (player != null)
-            player.LaunchPlayer();
+        if (Player != null)
+            Player.LaunchPlayer();
 
         yield return new WaitForSeconds(0.5f);
 
-    EndSequence:
         if (currentUIManager != null)
             currentUIManager.SetCountdownActive(false);
+        ChangeState(GameState.Playing);
+    }
+
+    //ゲームオーバーなどでプレイヤーやパドルを止める処理
+    private void StopGameEntities()
+    {
+        if (Player != null) Player.StopMovement();
+        if (paddle != null) paddle.LockPaddle();
+        SoundManager.Instance.StopBGM();
     }
 
     private IEnumerator ClearSequence()
     {
-        if (isEnding) yield break; //既に開始していたら何もしない
-        isEnding = true;
+        if (CurrentState == GameState.Ending) yield break; //既に開始していたら何もしない
+        ChangeState(GameState.Ending);
 
-        if (player != null)
-            player.StopMovement();
-        if (paddle != null)
-            paddle.LockPaddle();
-
-        SoundManager.Instance.StopBGM();
-
+        StopGameEntities();
         SaveHighScore(); //ハイスコアの更新
 
         yield return new WaitForSeconds(1f);
-
         SoundManager.Instance.PlayGameClearJingle();
-
         yield return new WaitForSeconds(jingleTime);
 
         SceneLoader.Instance.GameClearScene();
@@ -218,20 +253,13 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator GameOverSequence()
     {
-        if (isEnding) yield break;
-        isEnding = true;
+        if (CurrentState == GameState.Ending) yield break; //既に開始していたら何もしない
+        ChangeState(GameState.Ending);
 
-        if (player != null)
-            player.StopMovement();
-        if (paddle != null)
-            paddle.LockPaddle();
-
-        SoundManager.Instance.StopBGM();
+        StopGameEntities();
 
         yield return new WaitForSeconds(1f);
-
         SoundManager.Instance.PlayGameOverJingle();
-
         yield return new WaitForSeconds(jingleTime);
 
         SceneLoader.Instance.GameOverScene();
@@ -262,16 +290,13 @@ public class GameManager : MonoBehaviour
             {
                 currentUIManager.UpdateScore(scoreCount);
                 if (combocount >= 2)
-                {
                     currentUIManager.ShowCombo(combocount);
-                }
             }
 
             //ステージクリアしたかどうか
             if (totalBlocksInStage <= 0)
             {
                 StartCoroutine(ClearSequence());
-                return;
             }
         }
     }
@@ -288,7 +313,7 @@ public class GameManager : MonoBehaviour
     public void ReduceFatnessPoints(float amount)
     {
         // 減量前の体型を覚えておく
-        int oldLevel = player.FatnessLevel;
+        int oldLevel = Player.FatnessLevel;
 
         //ポイントを減らす（0未満にはならないようにClampする）
         fatnessPoints = Mathf.Max(0, fatnessPoints - amount);
@@ -297,11 +322,11 @@ public class GameManager : MonoBehaviour
         UpdateFatnessGauge();
 
         //体型が変化したらパドルの大きさも変更する
-        if (player.FatnessLevel < oldLevel)
+        if (Player.FatnessLevel < oldLevel)
         {
             if (paddle != null)
             {
-                paddle.UpdatePaddleVisual(player.FatnessLevel);
+                paddle.UpdatePaddleVisual(Player.FatnessLevel);
             }
         }
     }
@@ -321,18 +346,18 @@ public class GameManager : MonoBehaviour
     {
         if (fatnessPoints >= changeMaxFatPoints)
         {
-            if (player.FatnessLevel < 2)
-                player.ChangeFatnessLevel(2);
+            if (Player.FatnessLevel < 2)
+                Player.ChangeFatnessLevel(2);
         }
         else if (fatnessPoints >= changeChubbyPoints)
         {
-            if (player.FatnessLevel != 1)
-                player.ChangeFatnessLevel(1);
+            if (Player.FatnessLevel != 1)
+                Player.ChangeFatnessLevel(1);
         }
         else
         {
-            if (player.FatnessLevel > 0)
-                player.ChangeFatnessLevel(0);
+            if (Player.FatnessLevel > 0)
+                Player.ChangeFatnessLevel(0);
         }
     }
 
@@ -389,15 +414,10 @@ public class GameManager : MonoBehaviour
 
     public void OnBossDefeated()
     {
-        if (isEnding) return; //二重クリア防止
-        isEnding = true;
+        if (CurrentState == GameState.Ending) return; //既に開始していたら何もしない
+        ChangeState(GameState.Ending);
 
-        if (player != null)
-            player.StopMovement();
-        if (paddle != null)
-            paddle.LockPaddle();
-
-        SoundManager.Instance.StopBGM();
+        StopGameEntities();
     }
 
     //リザルト画面にスコアを送るための関数

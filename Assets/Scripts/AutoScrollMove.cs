@@ -17,7 +17,7 @@ public class AutoScrollMove : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (gm == null || gm.IsPaused || gm.isEnding || gm.Player == null)
+        if (gm == null || gm.IsPaused || gm.CurrentState == GameManager.GameState.Ending || gm.Player == null)
             return;
 
         transform.Translate(Vector3.left *  speed * Time.deltaTime);

@@ -5,46 +5,79 @@ using UnityEngine.U2D.Animation;
 
 public class PaddleController : MonoBehaviour
 {
+
+    [System.Serializable]
+    public struct PaddleSizeData
+    {
+        public string sizeLabel;    //"L", "M", "S"
+        public float colliderWidth; //9.6f, 6.2f, 3.0f
+    }
+
+    public enum PaddleState
+    {
+        Normal,            //通常の移動状態
+        WaitingForRelease, //カウントダウン中の状態
+        Charging,          //チャージ状態
+        Locked             //クリア・ゲームオーバー時の停止状態
+    }
+
+    [Header("パドル設定")]
     [SerializeField] private BoxCollider2D paddleCollider;
     [SerializeField] private SpriteResolver bodyResolver;
     [SerializeField] private float moveLimitX = 10f;
+    [SerializeField] private PaddleSizeData[] sizeDatas;
 
+    [Header("エフェクト設定")]
     [SerializeField] private GameObject sEndRoot;
     [SerializeField] private GameObject mEndRoot;
     [SerializeField] private ParticleSystem chargeEffect;
 
-    [HideInInspector] public bool isCharging = false;
+    public bool isCharging => currentState == PaddleState.Charging;
 
-    private bool isLocked = false; //ゲームクリア、ゲームオーバー演出中かを見る変数
-    private bool waitForRelease = false;
-    private Animator animator;
+    private PaddleState currentState = PaddleState.Normal;
     private int lastFatnessLevel = -1; //体型が変化したかチェックするための変数
+
+    //キャッシュ用変数（あらかじめ宣言しておいて、毎フレームの処理を少し軽くする）
+    private Animator animator;
+    private GameManager gm;
+    private ParticleSystem[] sEndParticles;
+    private ParticleSystem[] mEndParticles;
 
     private void Start()
     {
         animator = GetComponentInChildren<Animator>();
+        gm = GameManager.Instance; //Startで一度だけキャッシュする
 
-        if (GameManager.Instance != null)
-            GameManager.Instance.RegisterPaddle(this);
+        if (gm != null)
+            gm.RegisterPaddle(this);
     }
 
     public void LockPaddle()
     {
-        isLocked = true;
+        ChangeState(PaddleState.Locked);
     }
 
     void Update()
     {
         //ポーズ画面、ゲームクリア、ゲームオーバー演出、チュートリアル中は動かないように
-        if (GameManager.Instance.IsPaused || isLocked || GameManager.Instance.isTutorialActive)
+        if (gm.IsPaused || currentState == PaddleState.Locked || gm.CurrentState == GameManager.GameState.Tutorial)
         {
             //チャージ状態なら、強制的にオフにして音とエフェクトを止める
-            if (isCharging)
-                StopCharge();
-
+            if (currentState == PaddleState.Charging)
+                ChangeState(PaddleState.Normal);
             return;
         }
 
+        UpdateMovement();
+        UpdateChargeLogic();
+
+        //チャージ状態による表情の更新
+        if (animator != null)
+            animator.SetBool("isCharging", isCharging);
+    }
+
+    private void UpdateMovement()
+    {
         //マウスのスクリーン座標を取得
         Vector2 mousePosition = Input.mousePosition;
 
@@ -55,46 +88,66 @@ public class PaddleController : MonoBehaviour
         float targetX = worldPosition.x;
 
         //プレイヤーがパドルの中にいたり、パドルに追従しているなら壁の外に出ないよう移動幅に制限をかける
-        if (GameManager.Instance.Player != null &&
-            GameManager.Instance.Player.CurrentState != PlayerController.PlayerState.Playing)
+        if (gm.Player != null && gm.Player.CurrentState != PlayerController.PlayerState.Playing)
         {
             targetX = Mathf.Clamp(worldPosition.x, -moveLimitX, moveLimitX);
         }
 
         transform.position = new Vector2(targetX, transform.position.y);
+    }
 
-        //カウントダウン中はパドルの移動だけ処理
-        if (GameManager.Instance.Player != null && 
-            GameManager.Instance.Player.CurrentState == PlayerController.PlayerState.WaitingForStart)
+    private void UpdateChargeLogic()
+    {
+        //カウントダウン中の処理
+        if (gm.Player != null && gm.Player.CurrentState == PlayerController.PlayerState.WaitingForStart)
         {
-            if (isCharging)
-                StopCharge();
+            if (currentState == PaddleState.Charging)
+                ChangeState(PaddleState.Normal);
 
             //カウントダウンをスキップするための左クリックでチャージ状態にならないようにする
             if (Input.GetMouseButton(0))
-                waitForRelease = true;
+                ChangeState(PaddleState.WaitingForRelease);
 
             return;
         }
 
-        if (waitForRelease && !Input.GetMouseButton(0))
-            waitForRelease = false;
+        //クリックを離したら待機状態を解除
+        if (currentState == PaddleState.WaitingForRelease && !Input.GetMouseButton(0))
+            ChangeState(PaddleState.Normal);
 
         //チャージ状態の切り替え
-        if (Input.GetMouseButton(0) && !waitForRelease)
+        if (Input.GetMouseButton(0) && currentState != PaddleState.WaitingForRelease)
         {
-            if (!isCharging)
-                StartCharge();
+            if (currentState != PaddleState.Charging)
+                ChangeState(PaddleState.Charging);
         }
         else
         {
-            if (isCharging)
-                StopCharge();
+            if (currentState == PaddleState.Charging)
+                ChangeState(PaddleState.Normal);
+        }
+    }
+
+    private void ChangeState(PaddleState newState)
+    {
+        //同じステートなら返す
+        if (currentState == newState) return;
+
+        //古い状態がチャージ状態なら演出を止める
+        if (currentState == PaddleState.Charging)
+        {
+            SoundManager.Instance.StopChargeSE();
+            if (chargeEffect != null) chargeEffect.Stop();
         }
 
-        //チャージ状態による表情の更新
-        if (animator != null)
-            animator.SetBool("isCharging", isCharging);
+        currentState = newState;
+
+        //新しい状態がチャージ状態なら演出を始める
+        if (currentState == PaddleState.Charging)
+        {
+            SoundManager.Instance.StartChargeSE();
+            if (chargeEffect != null) chargeEffect.Play();
+        }
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
@@ -126,26 +179,6 @@ public class PaddleController : MonoBehaviour
         }
     }
 
-    private void StartCharge()
-    {
-        isCharging = true;
-
-        SoundManager.Instance.StartChargeSE();
-
-        if (chargeEffect != null)
-            chargeEffect.Play();
-    }
-
-    private void StopCharge()
-    {
-        isCharging = false;
-
-        SoundManager.Instance.StopChargeSE();
-
-        if (chargeEffect != null)
-            chargeEffect.Stop();
-    }
-
     public void SetPlayer(bool hasPlayer)
     {
         if (animator != null)
@@ -159,7 +192,7 @@ public class PaddleController : MonoBehaviour
     {
         SetPlayer(false);
 
-        PlayerController player = GameManager.Instance.Player;
+        PlayerController player = gm.Player;
 
         if (player != null)
         {
@@ -186,27 +219,11 @@ public class PaddleController : MonoBehaviour
         int oldLevel = lastFatnessLevel;
         int newLevel = fatnessLevel;
 
-        string sizeLabel = "L";
-        float colliderWidth = 9.6f;
-
-        if (fatnessLevel == 2)
+        if (sizeDatas != null && fatnessLevel >= 0 && fatnessLevel < sizeDatas.Length)
         {
-            sizeLabel = "S";
-            colliderWidth = 3f;
+            bodyResolver.SetCategoryAndLabel("Body", sizeDatas[fatnessLevel].sizeLabel);
+            paddleCollider.size = new Vector2(sizeDatas[fatnessLevel].colliderWidth, paddleCollider.size.y);
         }
-        else if (fatnessLevel == 1)
-        {
-            sizeLabel = "M";
-            colliderWidth = 6.2f;
-        }
-        else
-        {
-            sizeLabel = "L";
-            colliderWidth = 9.6f;
-        }
-
-        bodyResolver.SetCategoryAndLabel("Body", sizeLabel);
-        paddleCollider.size = new Vector2(colliderWidth, paddleCollider.size.y);
 
         if (oldLevel != -1 && oldLevel != newLevel) //初回起動時(-1)はエフェクトを出さない
         {
