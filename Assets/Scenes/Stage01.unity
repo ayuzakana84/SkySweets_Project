@@ -2868,7 +2868,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6607979314006554359, guid: 2be803debe3a62b4e9ddb7d0ea0b9335, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2886,10 +2886,6 @@ PrefabInstance:
     - target: {fileID: 5971199770814712960, guid: 1b08c8aeba879114c8d1635ce8f4e6f6, type: 3}
       propertyPath: m_Name
       value: CloudPad
-      objectReference: {fileID: 0}
-    - target: {fileID: 5971199770814712960, guid: 1b08c8aeba879114c8d1635ce8f4e6f6, type: 3}
-      propertyPath: m_IsActive
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8588408321983214844, guid: 1b08c8aeba879114c8d1635ce8f4e6f6, type: 3}
       propertyPath: m_LocalPosition.x
@@ -2950,7 +2946,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1493557422565781694, guid: e5b2cde37a1dbcf41b4f1c26a4007182, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6837839438086102119, guid: e5b2cde37a1dbcf41b4f1c26a4007182, type: 3}
       propertyPath: m_Pivot.x

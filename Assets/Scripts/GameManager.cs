@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using System;
 
 [DefaultExecutionOrder(-100)]
 public class GameManager : MonoBehaviour
@@ -30,7 +31,6 @@ public class GameManager : MonoBehaviour
 
     public PlayerController Player { get; private set; }
     private PaddleController paddle;
-    private UIManager currentUIManager;
     private TutorialUI currentTutorialUI;
 
     //スコア部分
@@ -39,6 +39,17 @@ public class GameManager : MonoBehaviour
     private int totalBlocksInStage = 0;
     private float fatnessPoints = 0;
     private int currentLife;
+
+    //UIマネージャーでUIを変更するイベント
+    public event Action<bool> OnStageSetup;
+    public event Action<int> OnScoreChanged;
+    public event Action<int> OnComboChanged;
+    public event Action OnComboReset;
+    public event Action<int> OnBlockCountChanged;
+    public event Action<float, int, int> OnFatnessChanged;
+    public event Action<int> OnLifeLostEvent;
+    public event Action<bool> OnCountdownActiveChanged;
+    public event Action<string> OnCountdownTextChanged;
 
     //ゲームマネージャーのセット
     private void Awake() //Awake()はStart()よりも早く実行される
@@ -55,17 +66,8 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void OnEnable()
-    {
-        // ライフが残っているGameManagerはシーンをまたいで生き残る
-        // シーンがロードされるたびに、参照更新関数を登録
-        SceneManager.sceneLoaded += OnSceneLoaded;
-    }
-
-    private void OnDisable()
-    {
-        SceneManager.sceneLoaded -= OnSceneLoaded;
-    }
+    private void OnEnable() => SceneManager.sceneLoaded += OnSceneLoaded;
+    private void OnDisable() => SceneManager.sceneLoaded -= OnSceneLoaded;
 
     public void ChangeState(GameState newState)
     {
@@ -80,37 +82,23 @@ public class GameManager : MonoBehaviour
 
         IsPaused = isPause;
 
-        if (IsPaused) Time.timeScale = 0f;
-        else Time.timeScale = 1f;
+        Time.timeScale = IsPaused ? 0f : 1f; //true = 0f, false = 1f
 
         if (SoundManager.Instance != null)
             SoundManager.Instance.SetPauseBGM(IsPaused);
     }
 
-    public void RegisterUIManager(UIManager uiManager)
+    public void RequestInitialUIUpdate()
     {
-        currentUIManager = uiManager;
-
-        // 登録された瞬間に、ボス戦かどうかに合わせてUIを切り替えるよう命令
-        currentUIManager.SetupStageUI(isBossStage);
-
-        // 各種UIの初期化命令
-        currentUIManager.UpdateScore(scoreCount);
-        currentUIManager.UpdateFatnessGauge(0, changeChubbyPoints, changeMaxFatPoints);
+        OnStageSetup?.Invoke(isBossStage);
+        OnScoreChanged?.Invoke(scoreCount);
+        OnFatnessChanged?.Invoke(fatnessPoints, changeChubbyPoints, changeMaxFatPoints);
         if (!isBossStage)
-            currentUIManager.UpdateBlockCount(totalBlocksInStage);
+            OnBlockCountChanged?.Invoke(totalBlocksInStage);
     }
 
-    //新しく生成されたプレイヤーの情報を受け取る
-    public void RegisterPlayer(PlayerController newPlayer)
-    {
-        Player = newPlayer;
-    }
-
-    public void RegisterPaddle(PaddleController newPaddle)
-    {
-        paddle = newPaddle;
-    }
+    public void RegisterPlayer(PlayerController newPlayer) => Player = newPlayer;
+    public void RegisterPaddle(PaddleController newPaddle) => paddle = newPaddle;
 
     public void RegisterTutorial(TutorialUI tutorialUI)
     {
@@ -125,9 +113,9 @@ public class GameManager : MonoBehaviour
             currentTutorialUI.OnTutorialFinished -= OnTutorialFinishedHandler;
             currentTutorialUI = null;
         }
-
         StartCountdownSequence();
     }
+
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         //ポーズから遷移した時用に正常化
@@ -154,16 +142,12 @@ public class GameManager : MonoBehaviour
 
             SoundManager.Instance.PlayBGM(BGMType.MainStage);
 
-            StartGameFlow();
+            StartCoroutine(StartGameFlow());
         }
-        else if (scene.name == "TitleScene")
-            SoundManager.Instance.PlayBGM(BGMType.Title);
-        else if (scene.name == "GameclearScene")
-            SoundManager.Instance.PlayBGM(BGMType.Clear);
-        else if (scene.name == "GameoverScene")
-            SoundManager.Instance.PlayBGM(BGMType.GameOver);
-        else if (scene.name == "StageSelectScene")
-            SoundManager.Instance.PlayBGM(BGMType.StageSelect);
+        else if (scene.name == "TitleScene") SoundManager.Instance.PlayBGM(BGMType.Title);
+        else if (scene.name == "GameclearScene") SoundManager.Instance.PlayBGM(BGMType.Clear);
+        else if (scene.name == "GameoverScene") SoundManager.Instance.PlayBGM(BGMType.GameOver);
+        else if (scene.name == "StageSelectScene") SoundManager.Instance.PlayBGM(BGMType.StageSelect);
     }
 
     private IEnumerator StartGameFlow()
@@ -173,9 +157,7 @@ public class GameManager : MonoBehaviour
 
         //チュートリアルが無かったらそのままゲーム開始
         if (CurrentState == GameState.Loading)
-        {
             StartCountdownSequence();
-        }
     }
 
     public void StartCountdownSequence()
@@ -187,14 +169,14 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator CountdownRoutine()
     {
-        if (currentUIManager != null)
-            currentUIManager.SetCountdownActive(true);
+        //カウントダウン開始
+        OnCountdownActiveChanged?.Invoke(true);
 
         int count = 3;
         while (count > 0)
         {
-            if (currentUIManager != null)
-                currentUIManager.UpdateCountdownText(count.ToString());
+            //テキストの更新
+            OnCountdownTextChanged?.Invoke(count.ToString());
 
             float timer = 0;
             while (timer < 1.0f)
@@ -202,10 +184,8 @@ public class GameManager : MonoBehaviour
                 //カウントダウンがスキップされた場合
                 if (Player != null && Player.CurrentState != PlayerController.PlayerState.WaitingForStart)
                 {
-                    if (currentUIManager != null)
-                        currentUIManager.SetCountdownActive(false);
+                    OnCountdownActiveChanged?.Invoke(false); //カウントダウン終了
                     ChangeState(GameState.Playing);
-
                     yield break;
                 }
 
@@ -215,16 +195,13 @@ public class GameManager : MonoBehaviour
             count--;
         }
 
-        if (currentUIManager != null)
-            currentUIManager.UpdateCountdownText("GO!");
-
+        OnCountdownTextChanged?.Invoke("GO!");
         if (Player != null)
             Player.LaunchPlayer();
 
         yield return new WaitForSeconds(0.5f);
 
-        if (currentUIManager != null)
-            currentUIManager.SetCountdownActive(false);
+        OnCountdownActiveChanged?.Invoke(false);
         ChangeState(GameState.Playing);
     }
 
@@ -277,27 +254,21 @@ public class GameManager : MonoBehaviour
         if(!isBossStage)
         {
             //残り枚数の表示
-            if (currentUIManager != null)
-                currentUIManager.UpdateBlockCount(totalBlocksInStage);
+            OnBlockCountChanged?.Invoke(totalBlocksInStage);
 
-            //スコアの加算と表示
+            //スコアとコンボの計算
             if (combocount < 10)
                 combocount++;
-
             scoreCount += scorePoint * combocount;
 
-            if (currentUIManager != null)
-            {
-                currentUIManager.UpdateScore(scoreCount);
-                if (combocount >= 2)
-                    currentUIManager.ShowCombo(combocount);
-            }
+            //スコアとコンボの表示
+            OnScoreChanged?.Invoke(scoreCount);
+            if (combocount >= 2)
+                OnComboChanged?.Invoke(combocount);
 
             //ステージクリアしたかどうか
             if (totalBlocksInStage <= 0)
-            {
                 StartCoroutine(ClearSequence());
-            }
         }
     }
 
@@ -305,9 +276,7 @@ public class GameManager : MonoBehaviour
     public void ResetCombo()
     {
         combocount = 0;
-
-        if (currentUIManager != null)
-            currentUIManager.HideCombo();
+        OnComboReset?.Invoke();
     }
 
     public void ReduceFatnessPoints(float amount)
@@ -325,19 +294,13 @@ public class GameManager : MonoBehaviour
         if (Player.FatnessLevel < oldLevel)
         {
             if (paddle != null)
-            {
                 paddle.UpdatePaddleVisual(Player.FatnessLevel);
-            }
         }
     }
 
     private void UpdateFatnessGauge()
     {
-        if (currentUIManager != null)
-        {
-            currentUIManager.UpdateFatnessGauge(fatnessPoints, changeChubbyPoints, changeMaxFatPoints);
-        }
-
+        OnFatnessChanged?.Invoke(fatnessPoints, changeChubbyPoints, changeMaxFatPoints);
         CheckBodyChange();
     }
 
@@ -364,9 +327,7 @@ public class GameManager : MonoBehaviour
     public Vector3 GetPaddlePosition()
     {
         if (paddle != null)
-        {
             return paddle.transform.position;
-        }
 
         return Vector3.zero;
     }
@@ -380,18 +341,13 @@ public class GameManager : MonoBehaviour
         SoundManager.Instance.PlayMissSE();
 
         if(currentLife <= 0)
-        {
             StartCoroutine(GameOverSequence());
-        }
         else
-        {
             StartCountdownSequence();
-        }
 
         if (currentLife >= 0 && currentLife < 3)
         {
-            if (currentUIManager != null)
-                currentUIManager.HideLifeIcon(currentLife);
+            OnLifeLostEvent?.Invoke(currentLife);
         }
     }
 
@@ -421,10 +377,7 @@ public class GameManager : MonoBehaviour
     }
 
     //リザルト画面にスコアを送るための関数
-    public int GetScore()
-    {
-        return scoreCount;
-    }
+    public int GetScore() => scoreCount;
 
     //ハイスコア機能
     public void SaveHighScore()
@@ -446,8 +399,5 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public int GetHighScore(string sceneName)
-    {
-        return PlayerPrefs.GetInt("HighScore_" + sceneName, 0);
-    }
+    public int GetHighScore(string sceneName) => PlayerPrefs.GetInt("HighScore_" + sceneName, 0);
 }

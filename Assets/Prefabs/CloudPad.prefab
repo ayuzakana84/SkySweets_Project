@@ -10733,10 +10733,16 @@ MonoBehaviour:
   paddleCollider: {fileID: 3215957830822369127}
   bodyResolver: {fileID: 5917468009088933138}
   moveLimitX: 9.5
+  sizeDatas:
+  - sizeLabel: L
+    colliderWidth: 9.6
+  - sizeLabel: M
+    colliderWidth: 6.2
+  - sizeLabel: S
+    colliderWidth: 3
   sEndRoot: {fileID: 72486265402992388}
   mEndRoot: {fileID: 4910487605341364833}
   chargeEffect: {fileID: 5316245395269557413}
-  isCharging: 0
 --- !u!61 &3215957830822369127
 BoxCollider2D:
   m_ObjectHideFlags: 0

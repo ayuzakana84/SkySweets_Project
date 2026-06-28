@@ -27,10 +27,21 @@ public class UIManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        // GameManagerに「このシーンのUI担当は私です！」と挨拶に行く
+        //ゲームマネージャーのイベントを登録
         if (GameManager.Instance != null)
         {
-            GameManager.Instance.RegisterUIManager(this);
+            GameManager.Instance.OnStageSetup += SetupStageUI;
+            GameManager.Instance.OnScoreChanged += UpdateScore;
+            GameManager.Instance.OnComboChanged += ShowCombo;
+            GameManager.Instance.OnComboReset += HideCombo;
+            GameManager.Instance.OnBlockCountChanged += UpdateBlockCount;
+            GameManager.Instance.OnFatnessChanged += UpdateFatnessGauge;
+            GameManager.Instance.OnLifeLostEvent += HideLifeIcon;
+            GameManager.Instance.OnCountdownActiveChanged += SetCountdownActive;
+            GameManager.Instance.OnCountdownTextChanged += UpdateCountdownText;
+
+            //ステージ開始時の状態をセット
+            GameManager.Instance.RequestInitialUIUpdate();
         }
 
         // 初期状態は非表示にしておくもの
@@ -38,7 +49,23 @@ public class UIManager : MonoBehaviour
         if (countdownRoot != null) countdownRoot.SetActive(false);
     }
 
-    // ① ボス戦かどうかでUIを切り替える
+    private void OnDestroy()
+    {
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.OnStageSetup -= SetupStageUI;
+            GameManager.Instance.OnScoreChanged -= UpdateScore;
+            GameManager.Instance.OnComboChanged -= ShowCombo;
+            GameManager.Instance.OnComboReset -= HideCombo;
+            GameManager.Instance.OnBlockCountChanged -= UpdateBlockCount;
+            GameManager.Instance.OnFatnessChanged -= UpdateFatnessGauge;
+            GameManager.Instance.OnLifeLostEvent -= HideLifeIcon;
+            GameManager.Instance.OnCountdownActiveChanged -= SetCountdownActive;
+            GameManager.Instance.OnCountdownTextChanged -= UpdateCountdownText;
+        }
+    }
+
+    //ボスステージかどうかでUIを切り替える
     public void SetupStageUI(bool isBossStage)
     {
         if (isBossStage)
@@ -55,14 +82,14 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    // ② スコアの更新
+    //スコアの更新
     public void UpdateScore(int score)
     {
         if (scoreText != null)
             scoreText.text = "Score: " + score.ToString();
     }
 
-    // ③ コンボの表示・更新
+    //コンボの表示・更新
     public void ShowCombo(int comboCount)
     {
         if (comboUIRoot != null) comboUIRoot.SetActive(true);
@@ -75,20 +102,20 @@ public class UIManager : MonoBehaviour
         if (comboAnim != null) comboAnim.PlayJump();
     }
 
-    // ④ コンボを隠す
+    //コンボを隠す
     public void HideCombo()
     {
         if (comboUIRoot != null) comboUIRoot.SetActive(false);
     }
 
-    // ⑤ ブロックの残り数を更新
+    //ブロックの残り数を更新
     public void UpdateBlockCount(int count)
     {
         if (blockCountText != null)
             blockCountText.text = "x " + count.ToString();
     }
 
-    // ⑥ カウントダウンの表示切替と文字更新
+    //カウントダウンの表示切替と文字更新
     public void SetCountdownActive(bool isActive)
     {
         if (countdownRoot != null) countdownRoot.SetActive(isActive);
@@ -99,7 +126,7 @@ public class UIManager : MonoBehaviour
         if (countdownText != null) countdownText.text = text;
     }
 
-    // ⑦ ライフアイコンを消す
+    //ライフアイコンを消す
     public void HideLifeIcon(int lifeIndex)
     {
         if (lifeIndex >= 0 && lifeIndex < lifeIcons.Length)
@@ -108,7 +135,7 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    // ⑧ 肥満度ゲージの更新
+    //肥満度ゲージの更新
     public void UpdateFatnessGauge(float current, int chubbyParams, int maxParams)
     {
         if (fatnessGauge != null)
