@@ -1572,6 +1572,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2077299294531987902, guid: 6d7d1b8c0d5c62649965ab3f526414fe, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3848564222015095268, guid: 6d7d1b8c0d5c62649965ab3f526414fe, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5167947870082938524, guid: 6d7d1b8c0d5c62649965ab3f526414fe, type: 3}
       propertyPath: m_Name
       value: Legholus

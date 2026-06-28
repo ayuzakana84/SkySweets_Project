@@ -1796,7 +1796,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Stage05
+  m_text: Stage 05
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -1886,8 +1886,9 @@ GameObject:
   - component: {fileID: 1514057398}
   - component: {fileID: 1514057397}
   - component: {fileID: 1514057396}
+  - component: {fileID: 1514057400}
   m_Layer: 5
-  m_Name: StageN Button (3)
+  m_Name: Stage06 Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1968,7 +1969,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1514057398}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 796989030}
+        m_TargetAssemblyTypeName: MenuManager, Assembly-CSharp
+        m_MethodName: OnClickToStage
+        m_Mode: 2
+        m_Arguments:
+          m_ObjectArgument: {fileID: 11400000, guid: 5816b8cb31354ef4fbc060fddbaa61f1, type: 2}
+          m_ObjectArgumentAssemblyTypeName: StageData, Assembly-CSharp
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1514057398
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2007,6 +2020,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1514057394}
   m_CullTransparentMesh: 1
+--- !u!114 &1514057400
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1514057394}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82883aa4e9af0554b8105763fc219ab0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  stageData: {fileID: 11400000, guid: 5816b8cb31354ef4fbc060fddbaa61f1, type: 2}
+  display: {fileID: 1824945372}
 --- !u!1 &1540791196
 GameObject:
   m_ObjectHideFlags: 0
@@ -2064,7 +2091,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Stage04
+  m_text: 'Stage 04
 
 '
   m_isRightToLeft: 0
@@ -2200,7 +2227,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "Coming Soon\u2026"
+  m_text: Stage Boss
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
