@@ -58,13 +58,13 @@ public class SceneLoader : MonoBehaviour
     //ゲームオーバーシーンへの切り替え
     public void GameOverScene()
     {
-        SceneFader.Instance.FadeToScene("GameoverScene"); //後々専用演出に変えたい
+        SceneFader.Instance.FadeToScene("GameoverScene");
     }
 
     //ゲームクリアシーンへの切り替え
     public void GameClearScene()
     {
-        SceneFader.Instance.FadeToScene("GameclearScene"); //後々専用演出に変えたい
+        SceneFader.Instance.FadeToScene("GameclearScene");
     }
 
     //ステージセレクトシーンへの切り替え

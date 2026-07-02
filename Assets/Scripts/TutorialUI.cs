@@ -7,7 +7,7 @@ public class TutorialUI : MonoBehaviour
 {
     public event Action OnTutorialFinished;
 
-    private void Awake()
+    private void Start()
     {
         //チュートリアルがあることをゲームマネージャーに伝える
         if (GameManager.Instance != null)
