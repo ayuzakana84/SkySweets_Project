@@ -36,6 +36,10 @@ public class GameManager : MonoBehaviour
     //スコア部分
     private int scoreCount = 0;
     private int combocount = 0;
+    private float stageTimer = 0f;
+    public int ScoreCount => scoreCount;
+    public float StageTimer => stageTimer;
+
     private int totalBlocksInStage = 0;
     private float fatnessPoints = 0;
     private int currentLife;
@@ -135,6 +139,7 @@ public class GameManager : MonoBehaviour
             fatnessPoints = 0;
             scoreCount = 0;
             combocount = 0;
+            stageTimer = 0f;
 
             //Tag("Block")を持つゲームオブジェクトの総数を設定
             GameObject[] blocks = GameObject.FindGameObjectsWithTag("Block");
@@ -240,6 +245,13 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(jingleTime);
 
         SceneLoader.Instance.GameOverScene();
+    }
+
+    //プレイ時間の計測
+    private void Update()
+    {
+        if (CurrentState == GameState.Playing && !IsPaused)
+            stageTimer += Time.deltaTime;
     }
 
     //壊したブロックのカウント,体型の変更
@@ -376,28 +388,82 @@ public class GameManager : MonoBehaviour
         StopGameEntities();
     }
 
-    //リザルト画面にスコアを送るための関数
-    public int GetScore() => scoreCount;
-
     //ハイスコア機能
     public void SaveHighScore()
     {
         //現在のステージ名を取得
         string currentSceneName = SceneManager.GetActiveScene().name;
 
-        //保存用のキーの名前を作る
-        string key = "HighScore_" + currentSceneName;
-
-        //過去のハイスコアをロードする
-        int savedHighScore = PlayerPrefs.GetInt(key, 0);
-
-        //ハイスコアを上回っていたら更新
-        if (scoreCount > savedHighScore)
+        //通常ステージはスコアを記録
+        if (!isBossStage)
         {
-            PlayerPrefs.SetInt(key, scoreCount);
-            PlayerPrefs.Save();
+            //保存用のキーの名前を作る
+            string key = "HighScore_" + currentSceneName;
+
+            //過去のハイスコアをロードする
+            int savedHighScore = PlayerPrefs.GetInt(key, 0);
+
+            //ハイスコアを上回っていたら更新
+            if (scoreCount > savedHighScore)
+            {
+                PlayerPrefs.SetInt(key, scoreCount);
+                PlayerPrefs.Save();
+            }
+        }
+        //ボスステージはタイムを記録
+        else
+        {
+            string key = "BestTime_" + currentSceneName;
+            float savedBestTime = PlayerPrefs.GetFloat(key, 9999f);
+
+            if (stageTimer < savedBestTime)
+            {
+                PlayerPrefs.SetFloat(key, stageTimer);
+                PlayerPrefs.Save();
+            }
         }
     }
 
-    public int GetHighScore(string sceneName) => PlayerPrefs.GetInt("HighScore_" + sceneName, 0);
+    //ハイスコアをリセットする関数
+    public void ResetStageRecord(StageData stageData)
+    {
+        if (!stageData.isTimeRecordStage)
+            PlayerPrefs.DeleteKey("HighScore_" + stageData.sceneName);
+        else
+            PlayerPrefs.DeleteKey("BestTime_" + stageData.sceneName);
+
+        PlayerPrefs.Save();
+    }
+
+    //秒数(float)を"00:00.00"の文字列にして返す関数
+    public string FormatTime(float time)
+    {
+        int minutes = Mathf.FloorToInt(time / 60F);
+        int seconds = Mathf.FloorToInt(time - minutes * 60);
+        int milliseconds = Mathf.FloorToInt((time - minutes * 60 - seconds) * 100);
+
+        return string.Format("{0:00}:{1:00}.{2:00}", minutes, seconds, milliseconds);
+    }
+
+    //ステージセレクトで表示するベストスコアを返す関数
+    public string GetBestRecordText(StageData stageData)
+    {
+        if (!stageData.isTimeRecordStage)
+        {
+            //通常ステージ：点数をロードして文字列にして返す
+            int highScore = PlayerPrefs.GetInt("HighScore_" + stageData.sceneName, 0);
+            return "High Score: " + highScore.ToString();
+        }
+        else
+        {
+            //ボスステージ：ベストタイムをロード
+            float bestTime = PlayerPrefs.GetFloat("BestTime_" + stageData.sceneName, 9999f);
+
+            //まだクリアタイムが保存されていない初期状態の時の表示
+            if (bestTime >= 9999f)
+                return "Best Time: --:--.--";
+
+            return "Best Time: " + FormatTime(bestTime);
+        }
+    }
 }

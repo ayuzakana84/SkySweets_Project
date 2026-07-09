@@ -15,3 +15,5 @@ MonoBehaviour:
   sceneName: Stage02
   displayStageName: 1-2
   previewImage: {fileID: 21300000, guid: 812e34bed7190a644a3c7efe40d62ee6, type: 3}
+  isTimeRecordStage: 0
+  hasTutorial: 1

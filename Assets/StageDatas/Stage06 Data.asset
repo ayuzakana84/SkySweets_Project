@@ -15,3 +15,4 @@ MonoBehaviour:
   sceneName: Stage06
   displayStageName: 1 - Boss
   previewImage: {fileID: 21300000, guid: 3beedbebfb17a0c46827f1407aa3e764, type: 3}
+  isTimeRecordStage: 1

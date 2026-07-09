@@ -10,10 +10,19 @@ public class ResultScoreViewer : MonoBehaviour
 
     void Start()
     {
-        //GameManagerからスコアの値を取ってくる
-        int score = GameManager.Instance.GetScore();
+        bool wasBossStage = GameManager.Instance.isBossStage;
 
-        //テキストに表示
-        resultScoreText.text = "Result: " + score.ToString();
+        if (!wasBossStage)
+        {
+            int score = GameManager.Instance.ScoreCount;
+
+            resultScoreText.text = "Result: " + score.ToString();
+        }
+        else
+        {
+            float clearTime = GameManager.Instance.StageTimer;
+
+            resultScoreText.text = "Clear Time: " + GameManager.Instance.FormatTime(clearTime);
+        }
     }
 }
