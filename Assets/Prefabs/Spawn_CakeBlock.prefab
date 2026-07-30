@@ -145,9 +145,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c9c2a687266c89441a4142f2de7bf24d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ScorePoint: 100
-  HitPoint: 1
-  FatnessPoint: 5
+  scorePoint: 100
+  hitPoint: 1
+  fatnessPoint: 5
   breakEffect: {fileID: 2600464913341489262, guid: cb56f5db93df2674da3018e2e200d281, type: 3}
 --- !u!114 &8585627274544782142
 MonoBehaviour:
@@ -162,7 +162,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 5
-  destroyX: -16
+  destroyX: -18
 --- !u!1 &5493868094680174862
 GameObject:
   m_ObjectHideFlags: 0

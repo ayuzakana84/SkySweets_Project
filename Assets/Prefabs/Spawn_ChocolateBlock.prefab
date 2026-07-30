@@ -244,9 +244,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6f3fcc90e9cfa1e4fab87168f4ff95a5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ScorePoint: 300
-  HitPoint: 3
-  FatnessPoint: 1
+  scorePoint: 300
+  hitPoint: 3
+  fatnessPoint: 1
   normalSprite: {fileID: 21300000, guid: 374e9ba0a99b396449973503bdc22c63, type: 3}
   damagedSprite01: {fileID: 21300000, guid: 8eb544820f84d9c46bf566fc56d6899f, type: 3}
   damagedSprite02: {fileID: 21300000, guid: f779e7ff0e9c91540b0d9be1e5ba2fd9, type: 3}
@@ -264,4 +264,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 5
-  destroyX: -16
+  destroyX: -18
